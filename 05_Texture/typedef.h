@@ -8,6 +8,7 @@ struct BasicVertex
 {
 	XMFLOAT3 position;
 	XMFLOAT4 color;
+	XMFLOAT2 texCoord;
 };
 
 union RGBA
