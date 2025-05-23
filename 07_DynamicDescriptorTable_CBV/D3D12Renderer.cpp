@@ -6,9 +6,14 @@
 #include <d3dx12.h>
 #include "D3DUtil.h"
 #include "BasicMeshObject.h"
+#include "D3D12ResourceManager.h"
+#include "DescriptorPool.h"
+#include "SimpleConstantBufferPool.h"
+
 #include "D3D12Renderer.h"
 
-#include "D3D12ResourceManager.h"
+
+
 
 CD3D12Renderer::CD3D12Renderer()
 {
@@ -56,8 +61,8 @@ BOOL CD3D12Renderer::Initialize(HWND _hWnd, BOOL _bEnableDebugLayer, BOOL _bEnab
 	}
 
 	// Create DXGIFactory
-	HRESULT createFactoryResult = CreateDXGIFactory2(dwCreateFactoryFalgs, IID_PPV_ARGS(&pFactory));
-	if (FAILED(createFactoryResult))
+	HRESULT hrCreateFactory = CreateDXGIFactory2(dwCreateFactoryFalgs, IID_PPV_ARGS(&pFactory));
+	if (FAILED(hrCreateFactory))
 	{
 		MessageBox(nullptr, L"CreateDXGIFactory2 failed", L"Error", MB_OK);
 		return FALSE;
@@ -120,7 +125,7 @@ lb_exit:
 		}
 	}
 
-	CreateDescriptorHeap();
+	CreateDescriptorHeapForRTV();
 	
 	RECT	rect;
 	::GetClientRect(_hWnd, &rect);
@@ -188,6 +193,7 @@ lb_exit:
 		m_pD3DDevice->CreateRenderTargetView(m_pRenderTargets[n], nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_rtvDescriptorSize);
 	}
+	m_srvDescriptorSize = m_pD3DDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	CreateCommandList();
 
@@ -196,6 +202,12 @@ lb_exit:
 
 	m_pResourceManager = new CD3D12ResourceManager;
 	m_pResourceManager->Initialize(m_pD3DDevice);
+
+	m_pDescriptorPool = new CDescriptorPool;
+	m_pDescriptorPool->Initialize(m_pD3DDevice, MAX_DRAW_COUNT_PER_FRAME * CBasicMeshObject::DESCRIPTOR_COUNT_FOR_DRAW);
+
+	m_pConstantBufferPool = new CSimpleConstantBufferPool;
+	m_pConstantBufferPool->Initialize(m_pD3DDevice, AlignConstantBufferSize(sizeof(CONSTANT_BUFFER_DEFAULT)), MAX_DRAW_COUNT_PER_FRAME);
 
 	bResult = TRUE;
 lb_return:
@@ -279,6 +291,9 @@ void CD3D12Renderer::Present()
 	Fence();
 
 	WaitForFenceValue();
+
+	m_pConstantBufferPool->Reset();
+	m_pDescriptorPool->Reset();
 }
 
 BOOL CD3D12Renderer::UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBufferHeight)
@@ -348,10 +363,8 @@ BOOL CD3D12Renderer::UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBuffe
 	return TRUE;
 }
 
-BOOL CD3D12Renderer::CreateDescriptorHeap()
+BOOL CD3D12Renderer::CreateDescriptorHeapForRTV()
 {
-	HRESULT hr = S_OK;
-
 	// ·»´õÅ¸°Ù¿ë µð½ºÅ©¸³ÅÍÈü
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 	rtvHeapDesc.NumDescriptors = SWAP_CHAIN_FRAME_COUNT;	// SwapChain Buffer 0	| SwapChain Buffer 1
@@ -368,7 +381,7 @@ BOOL CD3D12Renderer::CreateDescriptorHeap()
 	return TRUE;
 }
 
-void CD3D12Renderer::CleanupDescriptorHeap()
+void CD3D12Renderer::CleanupDescriptorHeapForRTV()
 {
 	if (m_pRTVHeap)
 	{
@@ -476,7 +489,19 @@ void CD3D12Renderer::CleanUp()
 		m_pResourceManager = nullptr;
 	}
 
-	CleanupDescriptorHeap();
+	if (m_pConstantBufferPool)
+	{
+		delete m_pConstantBufferPool;
+		m_pConstantBufferPool = nullptr;
+	}
+
+	if (m_pDescriptorPool)
+	{
+		delete m_pDescriptorPool;
+		m_pDescriptorPool = nullptr;
+	}
+
+	CleanupDescriptorHeapForRTV();
 
 	for (DWORD i = 0; i < SWAP_CHAIN_FRAME_COUNT; i++)
 	{

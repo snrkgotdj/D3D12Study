@@ -30,11 +30,17 @@
     <Filter Include="typedef.h">
       <UniqueIdentifier>{2bacbb12-2096-4c5f-9869-add74ec6c474}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{cffcd298-b77b-47bc-aac7-2f402f5210f5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Renderer\ResourceManager">
       <UniqueIdentifier>{044d62c5-bf0a-45f7-908d-c328d743d901}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shaders">
+      <UniqueIdentifier>{cffcd298-b77b-47bc-aac7-2f402f5210f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\DescriptorPool">
+      <UniqueIdentifier>{47f16ebb-4d03-4c19-b60d-ae35d9a7b9de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\ConstantBufferPool">
+      <UniqueIdentifier>{83075c77-0f28-48aa-ada5-07ddd23780a0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +67,12 @@
     </ClInclude>
     <ClInclude Include="D3D12ResourceManager.h">
       <Filter>Renderer\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleConstantBufferPool.h">
+      <Filter>Renderer\ConstantBufferPool</Filter>
+    </ClInclude>
+    <ClInclude Include="DescriptorPool.h">
+      <Filter>Renderer\DescriptorPool</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -98,10 +110,16 @@
     <ClCompile Include="D3D12ResourceManager.cpp">
       <Filter>Renderer\ResourceManager</Filter>
     </ClCompile>
+    <ClCompile Include="SimpleConstantBufferPool.cpp">
+      <Filter>Renderer\ConstantBufferPool</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorPool.cpp">
+      <Filter>Renderer\DescriptorPool</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Shaders\shaders.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Renderer\Shaders</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

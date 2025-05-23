@@ -3,9 +3,13 @@
 const UINT SWAP_CHAIN_FRAME_COUNT = 2;
 
 class CD3D12ResourceManager;
+class CDescriptorPool;
+class CSimpleConstantBufferPool;
 
 class CD3D12Renderer
 {
+	static const UINT MAX_DRAW_COUNT_PER_FRAME = 256;
+
 private:
 	HWND m_hWindow = nullptr;
 	ID3D12Device5* m_pD3DDevice = nullptr;
@@ -13,6 +17,8 @@ private:
 	CD3D12ResourceManager* m_pResourceManager = nullptr;
 	ID3D12CommandAllocator* m_pCommandAllocator = nullptr;
 	ID3D12GraphicsCommandList* m_pCommandList = nullptr;
+	CDescriptorPool* m_pDescriptorPool = nullptr;
+	CSimpleConstantBufferPool* m_pConstantBufferPool = nullptr;
 	UINT64	m_ui64FenceValue = 0;
 
 	D3D_FEATURE_LEVEL m_FeatureLevel = D3D_FEATURE_LEVEL_11_0;
@@ -28,6 +34,7 @@ private:
 	ID3D12DescriptorHeap* m_pDSVHeap = nullptr;
 	ID3D12DescriptorHeap* m_pSRVHeap = nullptr;
 	UINT m_rtvDescriptorSize = 0;
+	UINT m_srvDescriptorSize = 0;
 	UINT m_dwSwapChainFlags = 0;
 	UINT m_uiRenderTargetIndex = 0;
 	HANDLE m_hFenceEvent = nullptr;
@@ -43,8 +50,8 @@ public:
 	BOOL UpdateWindowSize(DWORD dwBackBufferWidth, DWORD dwBackBufferHeight);
 
 private:
-	BOOL CreateDescriptorHeap();
-	void CleanupDescriptorHeap();
+	BOOL CreateDescriptorHeapForRTV();
+	void CleanupDescriptorHeapForRTV();
 	void CreateFence();
 	void CleanupFence();
 	void CreateCommandList();
@@ -63,6 +70,9 @@ public:
 
 	ID3D12Device5* GetD3DDevice() const { return m_pD3DDevice; }
 	CD3D12ResourceManager* GetResourceManager() const { return m_pResourceManager; } // Placeholder for resource manager
+	CDescriptorPool* GetDescriptorPool() { return m_pDescriptorPool; }
+	CSimpleConstantBufferPool* GetConstantBufferPool() { return m_pConstantBufferPool; }
+	UINT GetSrvDescriptorSize() { return m_srvDescriptorSize; }
 
 public:
 	CD3D12Renderer();
