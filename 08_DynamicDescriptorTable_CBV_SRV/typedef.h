@@ -27,3 +27,9 @@ struct CONSTANT_BUFFER_DEFAULT
 {
 	XMFLOAT4	offset;
 };
+
+struct TEXTURE_HANDLE
+{
+	ID3D12Resource* pTexResource;
+	D3D12_CPU_DESCRIPTOR_HANDLE srv;
+};

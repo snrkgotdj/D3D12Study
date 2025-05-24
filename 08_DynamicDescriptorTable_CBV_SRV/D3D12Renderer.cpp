@@ -10,6 +10,8 @@
 #include "DescriptorPool.h"
 #include "SimpleConstantBufferPool.h"
 
+#include "SingleDescriptorAllocator.h"
+
 #include "D3D12Renderer.h"
 
 
@@ -208,6 +210,9 @@ lb_exit:
 
 	m_pConstantBufferPool = new CSimpleConstantBufferPool;
 	m_pConstantBufferPool->Initialize(m_pD3DDevice, AlignConstantBufferSize(sizeof(CONSTANT_BUFFER_DEFAULT)), MAX_DRAW_COUNT_PER_FRAME);
+
+	m_pSingleDescriptorAllocator = new CSingleDescriptorAllocator;
+	m_pSingleDescriptorAllocator->Initialize(m_pD3DDevice, MAX_DESCRIPTOR_COUNT, D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
 	bResult = TRUE;
 lb_return:
@@ -501,6 +506,12 @@ void CD3D12Renderer::CleanUp()
 		m_pDescriptorPool = nullptr;
 	}
 
+	if (m_pSingleDescriptorAllocator)
+	{
+		delete m_pSingleDescriptorAllocator;
+		m_pSingleDescriptorAllocator = nullptr;
+	}
+
 	CleanupDescriptorHeapForRTV();
 
 	for (DWORD i = 0; i < SWAP_CHAIN_FRAME_COUNT; i++)
@@ -562,10 +573,99 @@ void CD3D12Renderer::DeleteBasicMeshObject(void* pMeshObjHandle)
 	delete pMeshObj;
 }
 
-void CD3D12Renderer::RenderMeshObject(void* pMeshObjHandle, float x_offset, float y_offset)
+void* CD3D12Renderer::CreateTiledTexture(UINT TexWidth, UINT TexHeight, DWORD r, DWORD g, DWORD b)
+{
+	BOOL bResult = FALSE;
+
+	TEXTURE_HANDLE* pTexHandle = nullptr;
+	ID3D12Resource* pTexResource = nullptr;
+	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
+
+	DXGI_FORMAT TexFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	BYTE* pImage = (BYTE*)malloc(TexWidth * TexHeight * 4);
+	memset(pImage, 0, TexWidth * TexHeight * 4);
+
+	BOOL bFirstColorIsWhite = TRUE;
+
+	for (UINT y = 0; y < TexHeight; y++)
+	{
+		for (UINT x = 0; x < TexWidth; x++)
+		{
+
+			RGBA* pDest = (RGBA*)(pImage + (x + y * TexWidth) * 4);
+
+			if ((bFirstColorIsWhite + x) % 2)
+			{
+				pDest->r = r;
+				pDest->g = g;
+				pDest->b = b;
+			}
+			else
+			{
+				pDest->r = 0;
+				pDest->g = 0;
+				pDest->b = 0;
+			}
+			pDest->a = 255;
+		}
+		bFirstColorIsWhite++;
+		bFirstColorIsWhite %= 2;
+	}
+
+	BOOL bSuccessCreateTexture = m_pResourceManager->CreateTexture(&pTexResource, TexWidth, TexHeight, TexFormat, pImage);
+	if (bSuccessCreateTexture)
+	{
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Format = TexFormat;
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = 1;
+
+		if (m_pSingleDescriptorAllocator->AllocDescriptorHandle(&srv))
+		{
+			m_pD3DDevice->CreateShaderResourceView(pTexResource, &srvDesc, srv);
+
+			pTexHandle = new TEXTURE_HANDLE;
+			pTexHandle->pTexResource = pTexResource;
+			pTexHandle->srv = srv;
+			bResult = TRUE;
+		}
+		else
+		{
+			pTexResource->Release();
+			pTexResource = nullptr;
+		}
+	}
+
+	free(pImage);
+	pImage = nullptr;
+
+	return pTexHandle;
+}
+
+void CD3D12Renderer::DeleteTexture(void* pTexHandle)
+{
+	TEXTURE_HANDLE* pTexHandleStruct = (TEXTURE_HANDLE*)pTexHandle;
+	ID3D12Resource* pTexResource = pTexHandleStruct->pTexResource;
+	D3D12_CPU_DESCRIPTOR_HANDLE srv = pTexHandleStruct->srv;
+
+	pTexResource->Release();
+	m_pSingleDescriptorAllocator->FreeDescriptorHandle(srv);
+
+	delete pTexHandleStruct;
+}
+
+void CD3D12Renderer::RenderMeshObject(void* pMeshObjHandle, float x_offset, float y_offset, void* pTexHandle)
 {
 	CBasicMeshObject* pMeshObj = (CBasicMeshObject*)pMeshObjHandle;
-	XMFLOAT2 pos = { x_offset, y_offset };
 
-	pMeshObj->Draw(m_pCommandList, &pos);
+	D3D12_CPU_DESCRIPTOR_HANDLE srv = {};
+	if (pTexHandle)
+	{
+		srv = ((TEXTURE_HANDLE*)pTexHandle)->srv;
+	}
+
+	XMFLOAT2 pos = { x_offset, y_offset };
+	pMeshObj->Draw(m_pCommandList, &pos, srv);
 }

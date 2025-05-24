@@ -147,8 +147,10 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SimpleConstantBufferPool.h" />
+    <ClInclude Include="SingleDescriptorAllocator.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="typedef.h" />
+    <ClInclude Include="Util\IndexCreator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BasicMeshObject.cpp" />
@@ -161,6 +163,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SimpleConstantBufferPool.cpp" />
+    <ClCompile Include="SingleDescriptorAllocator.cpp" />
+    <ClCompile Include="Util\IndexCreator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="D3D12Study.rc" />

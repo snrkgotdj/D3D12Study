@@ -43,6 +43,9 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
 CD3D12Renderer* g_pRenderer = nullptr;
 void* g_pMeshObj = nullptr;
+void* g_pTexHandle0 = nullptr;
+void* g_pTexHandle1 = nullptr;
+
 float g_fOffsetX = 0.0f;
 float g_fOffsetY = 0.0f;
 float g_fSpeedX = 0.01f;
@@ -95,6 +98,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     g_pRenderer->Initialize(g_hMainWindow, TRUE, TRUE);
     g_pMeshObj = g_pRenderer->CreateBasicMeshObject();
 
+    g_pTexHandle0 = g_pRenderer->CreateTiledTexture(16, 16, 192, 128, 255);
+    g_pTexHandle1 = g_pRenderer->CreateTiledTexture(32, 32, 128, 255, 192);
+
     SetWindowText(g_hMainWindow, L"DrawTriangle_SysMem");
     // Main message loop:
     /*while (GetMessage(&msg, nullptr, 0, 0))
@@ -134,6 +140,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         g_pMeshObj = nullptr;
     }
 
+    if (g_pTexHandle0)
+    {
+        g_pRenderer->DeleteTexture(g_pTexHandle0);
+        g_pTexHandle0 = nullptr;
+    }
+
+    if (g_pTexHandle1)
+    {
+        g_pRenderer->DeleteTexture(g_pTexHandle1);
+        g_pTexHandle1 = nullptr;
+    }
+
     if (g_pRenderer)
     {
         delete g_pRenderer;
@@ -162,13 +180,9 @@ void RunGame()
         g_PrvUpdateTick = curTick;
     }
 
-    g_pRenderer->RenderMeshObject(g_pMeshObj, g_fOffsetX, 0.0f);
+    g_pRenderer->RenderMeshObject(g_pMeshObj, g_fOffsetX, 0.0f, g_pTexHandle0);
 
-    g_pRenderer->RenderMeshObject(g_pMeshObj, 0.0f, g_fOffsetY);
-
-    g_pRenderer->RenderMeshObject(g_pMeshObj, g_fOffsetX, g_fOffsetY);
-
-    g_pRenderer->RenderMeshObject(g_pMeshObj, -g_fOffsetX, g_fOffsetY);
+    g_pRenderer->RenderMeshObject(g_pMeshObj, 0.0f, g_fOffsetY, g_pTexHandle1);
 
     g_pRenderer->EndRender();
 
@@ -209,6 +223,12 @@ void Update()
     {
         g_fSpeedY *= -1.0f;
         bDirChanged = TRUE;
+    }
+    if (bDirChanged)
+    {
+        void* pTemp = g_pTexHandle0;
+        g_pTexHandle0 = g_pTexHandle1;
+        g_pTexHandle1 = pTemp;
     }
 }
 

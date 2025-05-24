@@ -42,6 +42,9 @@
     <Filter Include="Renderer\ConstantBufferPool">
       <UniqueIdentifier>{83075c77-0f28-48aa-ada5-07ddd23780a0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\SingleDescriptorAllocator">
+      <UniqueIdentifier>{15c1fa9c-9138-4fff-827c-a248c5d58715}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -73,6 +76,12 @@
     </ClInclude>
     <ClInclude Include="DescriptorPool.h">
       <Filter>Renderer\DescriptorPool</Filter>
+    </ClInclude>
+    <ClInclude Include="SingleDescriptorAllocator.h">
+      <Filter>Renderer\SingleDescriptorAllocator</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\IndexCreator.h">
+      <Filter>Util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +124,12 @@
     </ClCompile>
     <ClCompile Include="DescriptorPool.cpp">
       <Filter>Renderer\DescriptorPool</Filter>
+    </ClCompile>
+    <ClCompile Include="SingleDescriptorAllocator.cpp">
+      <Filter>Renderer\SingleDescriptorAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="Util\IndexCreator.cpp">
+      <Filter>Util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

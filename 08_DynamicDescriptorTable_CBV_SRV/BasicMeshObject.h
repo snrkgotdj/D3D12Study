@@ -3,13 +3,14 @@
 enum BASIC_MESH_DESCRIPTOR_INDEX
 {
 	BASIC_MESH_DESCRIPTOR_INDEX_CBV = 0,
+	BASIC_MESH_DESCRIPTOR_INDEX_TEX = 1,
 };
 
 class CD3D12Renderer;
 class CBasicMeshObject
 {
 public:
-	static const UINT DESCRIPTOR_COUNT_FOR_DRAW = 1;	// | Constant Buffer |
+	static const UINT DESCRIPTOR_COUNT_FOR_DRAW = 2;	// | Constant Buffer | Tex |
 
 private:
 	static ID3D12RootSignature* m_pRootSignature;
@@ -33,7 +34,7 @@ public:
 
 public:
 	BOOL Initialize(CD3D12Renderer* _pRenderer);
-	void Draw(ID3D12GraphicsCommandList* pCommandList, const XMFLOAT2* pPos);
+	void Draw(ID3D12GraphicsCommandList* pCommandList, const XMFLOAT2* pPos, D3D12_CPU_DESCRIPTOR_HANDLE srv);
 	BOOL CreateMesh();
 
 public:
